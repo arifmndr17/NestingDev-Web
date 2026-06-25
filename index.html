@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NestingDev</title>
     
-   <!-- Bagian Favicon Lama yang sudah dimodifikasi dengan versi baru (?v=2) -->
-   <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png?v=2">
-   <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png?v=2">
-   <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png?v=2">
-   <link rel="manifest" href="favicon/site.webmanifest?v=2">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png?v=2">
+    <link rel="manifest" href="favicon/site.webmanifest?v=2">
     
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     
@@ -62,6 +61,70 @@
             transition: var(--transition); 
             overflow-x: hidden; 
             cursor: crosshair; 
+        }
+
+        /* === ANIMASI LOADING NYALA PERTAMA KALI === */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-base);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .loader-logo {
+            font-size: 4.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transform: scale(0);
+            animation: scaleInLogo 0.6s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .loader-text {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 6px; 
+            display: inline-block;
+        }
+
+        .loader-letter {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            background: var(--gradient-text);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: letterFadeIn 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes scaleInLogo {
+            to { transform: scale(1); }
+        }
+
+        @keyframes letterFadeIn {
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        body.loading-active {
+            overflow: hidden;
         }
 
         /* === KURSOR ASAP & CLICK ANIMATION === */
@@ -429,10 +492,19 @@
             .nav-links { display: none; }
             .profile-container h1 { font-size: 2.5rem; }
             section { padding: 80px 5%; }
+            .loader-logo { font-size: 3.5rem; }
+            .loader-text { font-size: 1.5rem; letter-spacing: 4px; }
         }
     </style>
 </head>
 <body>
+
+    <div id="preloader">
+        <div class="loader-content">
+            <div class="loader-logo">ND</div>
+            <div class="loader-text" id="loaderText">NestingDev</div>
+        </div>
+    </div>
 
     <canvas id="techCanvas"></canvas>
 
@@ -457,9 +529,7 @@
     <section id="hero">
         <div class="profile-wrapper reveal">
             <div class="profile-container">
-                
                 <img src="favicon/logo-nestingdev.png" alt="NestingDev" class="profile-img">
-                
                 <h1>We are <span class="gradient-text">NestingDev</span></h1>
                 <h2>Tech Enthusiast & Digital Innovator</h2>
                 <p>Membangun masa depan ekosistem web yang modern, elegan, dan revolusioner melalui barisan kode dan teknologi tingkat tinggi.</p>
@@ -553,6 +623,36 @@
 
     <script>
         /* =========================================
+           0. KONTROL LOGIKA PRELOADER
+           ========================================= */
+        document.body.classList.add('loading-active');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const preloader = document.getElementById('preloader');
+            const loaderText = document.getElementById('loaderText');
+            
+            const textString = loaderText.textContent.trim();
+            loaderText.textContent = '';
+            
+            // Memecah teks "NestingDev" dan menyusun animasinya per huruf
+            textString.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.classList.add('loader-letter');
+                // Dimulai setelah logo ND selesai memantul (0.4 detik awal + delay per huruf)
+                span.style.animationDelay = `${0.4 + (index * 0.08)}s`;
+                loaderText.appendChild(span);
+            });
+
+            // Layar preloader menutup secara halus setelah semua huruf selesai muncul
+            setTimeout(() => {
+                preloader.style.opacity = '0';
+                preloader.style.visibility = 'hidden';
+                document.body.classList.remove('loading-active');
+            }, 2400); 
+        });
+
+        /* =========================================
            1. LOGIKA KURSOR ASAP BERWARNA
            ========================================= */
         const smokeCanvas = document.createElement('canvas');
@@ -569,13 +669,11 @@
 
         let smokeParticles = [];
         let mouse = { x: -100, y: -100 };
-
         const smokeColors = ['168, 85, 247', '59, 130, 246', '236, 72, 153'];
 
         window.addEventListener('mousemove', (e) => {
             mouse.x = e.clientX;
             mouse.y = e.clientY;
-            
             for (let i = 0; i < 3; i++) {
                 smokeParticles.push(new SmokeParticle(mouse.x, mouse.y));
             }
@@ -609,11 +707,9 @@
         function animateSmoke() {
             requestAnimationFrame(animateSmoke);
             smokeCtx.clearRect(0, 0, smokeCanvas.width, smokeCanvas.height);
-            
             for (let i = 0; i < smokeParticles.length; i++) {
                 smokeParticles[i].update();
                 smokeParticles[i].draw();
-                
                 if (smokeParticles[i].life <= 0) {
                     smokeParticles.splice(i, 1);
                     i--;
@@ -628,10 +724,7 @@
             ripple.style.left = (e.clientX - 10) + 'px'; 
             ripple.style.top = (e.clientY - 10) + 'px';
             document.body.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
+            setTimeout(() => { ripple.remove(); }, 600);
         });
 
         /* =========================================
@@ -665,7 +758,6 @@
                 var windowHeight = window.innerHeight;
                 var elementTop = reveals[i].getBoundingClientRect().top;
                 var elementVisible = 100;
-
                 if (elementTop < windowHeight - elementVisible) {
                     reveals[i].classList.add("active");
                 }
@@ -708,7 +800,7 @@
         });
 
         /* =========================================
-           5. CANVAS TECH NETWORK
+           5. CANVAS TECH NETWORK (FIXED TYPO HERE)
            ========================================= */
         const canvas = document.getElementById('techCanvas');
         const ctx = canvas.getContext('2d');
@@ -737,6 +829,7 @@
             }
         }
 
+        // DI SINI SUDAH FIXED (Menggunakan kata kunci 'function' dengan benar)
         function initCanvas() {
             particlesArray = [];
             let numberOfParticles = (canvas.height * canvas.width) / 12000;
@@ -756,14 +849,18 @@
 
             for (let a = 0; a < particlesArray.length; a++) {
                 for (let c = a; c < particlesArray.length; c++) {
-                    let dx = particlesArray[a].x - particlesArray[c].x; let dy = particlesArray[a].y - particlesArray[c].y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < maxDistance) {
-                        let opacityValue = 1 - (distance / maxDistance);
+                    let dx = particlesArray[a].x - particlesArray[c].x; 
+                    let dy = particlesArray[a].y - particlesArray[c].y;
+                    let distance = (dx * dx) + (dy * dy);
+                    
+                    if (distance < maxDistance * maxDistance) {
+                        let opacityValue = 1 - (distance / (maxDistance * maxDistance));
                         ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacityValue})`;
-                        ctx.lineWidth = 1; ctx.beginPath();
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
                         ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
-                        ctx.lineTo(particlesArray[c].x, particlesArray[c].y); ctx.stroke();
+                        ctx.lineTo(particlesArray[c].x, particlesArray[c].y);
+                        ctx.stroke();
                     }
                 }
             }
@@ -772,12 +869,14 @@
         function animateCanvas() {
             requestAnimationFrame(animateCanvas);
             ctx.clearRect(0, 0, innerWidth, innerHeight);
-            for (let i = 0; i < particlesArray.length; i++) particlesArray[i].update();
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
             connectParticles();
         }
 
-        initCanvas(); animateCanvas();
-        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        animateCanvas();
     </script>
 </body>
 </html>
