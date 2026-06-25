@@ -10,9 +10,32 @@
     <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png?v=2">
     <link rel="manifest" href="favicon/site.webmanifest?v=2">
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     
     <style>
+        
+        /*Social Icon New*/
+        .social-icons {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+        }
+
+        .social-icons a {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .social-icons a:hover {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transform: translateY(-5px) scale(1.2);
+        }
+        
         /* === VARIABEL WARNA === */
         :root {
             --gradient-primary: linear-gradient(135deg, #3b82f6, #a855f7, #ec4899);
@@ -534,6 +557,14 @@
                 <h2>Tech Enthusiast & Digital Innovator</h2>
                 <p>Membangun masa depan ekosistem web yang modern, elegan, dan revolusioner melalui barisan kode dan teknologi tingkat tinggi.</p>
                 <a href="#projects" class="btn-primary">Lihat Karya Kami</a>
+                
+                <div class="social-icons">
+                <a href="https://github.com/arifmndr17" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="https://t.me/NestingDev" target="_blank"><i class="fab fa-telegram"></i></a>
+                <a href="https://youtube.com/@NestingDev" target="_blank"><i class="fab fa-youtube"></i></a>
+                <a href="https://tiktok.com/@NestingDev" target="_blank"><i class="fab fa-tiktok"></i></a>
+                <a href="https://instagram.com/NestingDev" target="_blank"><i class="fab fa-instagram"></i></a>
+                </div>
             </div>
         </div>
     </section>
