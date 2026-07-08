@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NestingDev</title>
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png?v=2">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png?v=2">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png?v=2">
+    <link rel="manifest" href="favicon/site.webmanifest?v=2">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === VARIABEL WARNA & NEUMORPHISM === */
+        :root {
+            --gradient-primary: linear-gradient(135deg, #3b82f6, #a855f7, #ec4899);
+            --gradient-text: linear-gradient(to right, #60a5fa, #c084fc, #f472b6);
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        [data-theme="dark"] {
+            --bg-base: #1e222b; /* Abu-abu gelap netral agar shadow terlihat */
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            /* Shadow Timbul (Out) dan Tenggelam (In) */
+            --nm-out: 8px 8px 16px #11141a, -8px -8px 16px #2b303c;
+            --nm-in: inset 8px 8px 16px #11141a, inset -8px -8px 16px #2b303c;
+            --nm-out-sm: 4px 4px 8px #11141a, -4px -4px 8px #2b303c;
+            --nm-in-sm: inset 4px 4px 8px #11141a, inset -4px -4px 8px #2b303c;
+        }
+
+        [data-theme="light"] {
+            --bg-base: #e0e8f3; /* Warna pastel lembut khas neumorphism */
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            /* Shadow Timbul (Out) dan Tenggelam (In) */
+            --nm-out: 8px 8px 16px #b5c2d7, -8px -8px 16px #ffffff;
+            --nm-in: inset 8px 8px 16px #b5c2d7, inset -8px -8px 16px #ffffff;
+            --nm-out-sm: 4px 4px 8px #b5c2d7, -4px -4px 8px #ffffff;
+            --nm-in-sm: inset 4px 4px 8px #b5c2d7, inset -4px -4px 8px #ffffff;
+        }
+
+        /* === RESET & BASE === */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Outfit', sans-serif; 
+        }
+        
+        html { 
+            scroll-behavior: smooth; 
+            scroll-padding-top: 80px; 
+        }
+        
+        body { 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
+            transition: var(--transition); 
+            overflow-x: hidden; 
+            cursor: crosshair; 
+        }
+
+        /* === PRELOADER === */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--bg-base);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .loader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .loader-logo {
+            font-size: 4.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transform: scale(0);
+            animation: scaleInLogo 0.6s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .loader-text {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 6px; 
+            display: inline-block;
+        }
+
+        .loader-letter {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            background: var(--gradient-text);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: letterFadeIn 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes scaleInLogo { to { transform: scale(1); } }
+        @keyframes letterFadeIn { to { opacity: 1; transform: translateY(0); } }
+        body.loading-active { overflow: hidden; }
+
+        /* === KURSOR & EFFECTS === */
+        #smokeCanvas {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 9998; pointer-events: none; filter: blur(6px); 
+        }
+
+        .ripple {
+            position: fixed;
+            border: 2px solid #ec4899;
+            border-radius: 50%;
+            transform: scale(0);
+            pointer-events: none;
+            z-index: 9999;
+            animation: ripple-effect 0.6s linear;
+        }
+
+        #techCanvas { 
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            z-index: -1; pointer-events: none; 
+        }
+
+        /* === GLOBAL SECTION === */
+        section { 
+            padding: 100px 5%; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            position: relative; 
+            z-index: 1; 
+        }
+        .section-title { 
+            font-size: 2.5rem; 
+            text-align: center; 
+            margin-bottom: 50px; 
+            font-weight: 800; 
+        }
+        .gradient-text { 
+            background: var(--gradient-text); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+
+        .reveal { 
+            opacity: 0; 
+            transform: translateY(30px); 
+            transition: all 0.8s ease-out; 
+        }
+        .reveal.active { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+
+        /* === NAVIGASI (Neumorphic Bar) === */
+        nav {
+            position: fixed; 
+            top: 20px; 
+            left: 5%;
+            right: 5%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 15px 30px; 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center; 
+            background: var(--bg-base); 
+            border-radius: 20px;
+            box-shadow: var(--nav-shadow, var(--nm-out));
+            z-index: 1000; 
+            transition: var(--transition);
+        }
+        .logo-link { text-decoration: none; }
+        .nav-logo-text { 
+            font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px;
+            display: inline-block; animation: pulseGlowText 2s infinite alternate; 
+        }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { 
+            color: var(--text-main); text-decoration: none; font-weight: 600; 
+            position: relative; transition: var(--transition); padding: 5px 10px;
+            border-radius: 8px;
+        }
+        .nav-links a:hover {
+            box-shadow: var(--nm-in-sm);
+        }
+        
+        .theme-toggle {
+            background: var(--bg-base); 
+            border: none;
+            color: var(--text-main);
+            padding: 8px 20px; 
+            border-radius: 30px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            box-shadow: var(--nm-out-sm);
+            transition: var(--transition);
+        }
+        .theme-toggle:hover { 
+            box-shadow: var(--nm-in-sm);
+            color: #a855f7;
+        }
+
+        /* === 1. HERO SECTION === */
+        #hero { 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            padding-top: 140px; 
+        }
+        .profile-container { 
+            position: relative; 
+            background: var(--bg-base); 
+            box-shadow: var(--nm-out);
+            padding: 50px; 
+            border-radius: 30px; 
+            z-index: 1; 
+            max-width: 750px;
+            width: 100%;
+        }
+        .profile-img { 
+            width: 160px; height: auto; 
+            border-radius: 30px; 
+            box-shadow: var(--nm-out-sm);
+            margin-bottom: 25px; 
+            animation: float 4s ease-in-out infinite; 
+            padding: 5px;
+            background: var(--bg-base);
+        }
+        .profile-container h1 { font-size: 3.5rem; margin-bottom: 10px; }
+        .profile-container h2 { font-size: 1.5rem; color: var(--text-muted); margin-bottom: 20px; font-weight: 400; }
+        .profile-container p { font-size: 1.1rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 30px; }
+        
+        /* Neumorphic Buttons */
+        .btn-primary {
+            display: inline-block; 
+            padding: 12px 35px; 
+            background: var(--bg-base);
+            color: var(--text-main);
+            text-decoration: none; 
+            border-radius: 30px; 
+            font-weight: 700; 
+            box-shadow: var(--nm-out-sm);
+            transition: var(--transition);
+        }
+        .btn-primary:hover { 
+            box-shadow: var(--nm-in-sm);
+            color: #ec4899;
+        }
+
+        .social-icons {
+            margin-top: 25px; display: flex; justify-content: center; gap: 18px;
+        }
+        .social-icons a {
+            font-size: 1.4rem; color: var(--text-muted); transition: var(--transition);
+            width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; box-shadow: var(--nm-out-sm); background: var(--bg-base);
+        }
+        .social-icons a:hover {
+            box-shadow: var(--nm-in-sm);
+            color: #3b82f6;
+        }
+        
+        /* === 2. ABOUT SECTION === */
+        .about-content {
+            background: var(--bg-base); 
+            box-shadow: var(--nm-out);
+            border-radius: 24px;
+            padding: 40px; text-align: center; 
+        }
+        .about-content p { 
+            font-size: 1.15rem; line-height: 1.8; color: var(--text-muted); margin-bottom: 15px; 
+        }
+
+        /* === 3. SKILLS SECTION === */
+        .skills-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 25px; 
+        }
+        .skill-card {
+            background: var(--bg-base); 
+            box-shadow: var(--nm-out-sm);
+            padding: 25px 15px; border-radius: 20px; text-align: center; font-weight: 600; 
+            transition: var(--transition); 
+        }
+        .skill-card:hover { 
+            box-shadow: var(--nm-in-sm);
+            color: #a855f7;
+        }
+
+        /* === 4. PROJECTS SECTION === */
+        .projects-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 35px; 
+        }
+        .project-card {
+            background: var(--bg-base); 
+            box-shadow: var(--nm-out);
+            border-radius: 24px; overflow: hidden; padding: 15px; transition: var(--transition); 
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+        }
+        .project-img-placeholder {
+            width: 100%; height: 180px; 
+            background: var(--bg-base);
+            box-shadow: var(--nm-in-sm);
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .project-info { padding: 20px 10px 10px 10px; }
+        .project-info h3 { font-size: 1.4rem; margin-bottom: 10px; }
+        .project-info p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 20px; line-height: 1.6; }
+
+        /* === 5. CONTACT SECTION === */
+        .contact-form {
+            max-width: 600px; margin: 0 auto; background: var(--bg-base); 
+            padding: 40px; border-radius: 24px; box-shadow: var(--nm-out);
+        }
+        .form-group { margin-bottom: 25px; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 15px 20px; border-radius: 15px; border: none;
+            background: var(--bg-base); box-shadow: var(--nm-in);
+            color: var(--text-main); outline: none; transition: var(--transition); font-size: 1rem;
+        }
+        .form-group input:focus, .form-group textarea:focus { 
+            box-shadow: var(--nm-in), 0 0 5px rgba(236, 72, 153, 0.2);
+        }
+        .form-group textarea { height: 150px; resize: vertical; }
+        
+        .btn-submit {
+            width: 100%; padding: 15px; background: var(--bg-base); border: none; 
+            border-radius: 15px; color: var(--text-main); font-weight: 700; font-size: 1.1rem; 
+            cursor: pointer; box-shadow: var(--nm-out-sm); transition: var(--transition);
+        }
+        .btn-submit:hover { 
+            box-shadow: var(--nm-in-sm);
+            color: #a855f7;
+        }
+
+        /* === FOOTER === */
+        footer { 
+            text-align: center; padding: 40px; background: var(--bg-base); 
+            border-top: none; position: relative; z-index: 1; margin-top: 50px;
+            box-shadow: inset 0 8px 16px rgba(0,0,0,0.05);
+        }
+        footer p { color: var(--text-muted); }
+
+        /* === MUSIK BUTTON === */
+        .music-toggle {
+            position: fixed; bottom: 30px; right: 30px; 
+            background: var(--bg-base); color: var(--text-main);
+            width: 65px; height: 65px; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; font-size: 24px; 
+            box-shadow: var(--nm-out); z-index: 1000; cursor: pointer; transition: var(--transition);
+        }
+        .music-toggle:hover {
+            box-shadow: var(--nm-in);
+        }
+        .music-toggle.playing { animation: spinMusic 4s linear infinite; }
+
+        /* === KEYFRAMES === */
+        @keyframes float { 
+            0%, 100% { transform: translateY(0px); } 
+            50% { transform: translateY(-12px); } 
+        }
+        @keyframes pulseGlowText { 
+            0% { filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.2)); } 
+            100% { filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.4)); } 
+        }
+        @keyframes spinMusic { 100% { transform: rotate(360deg); } }
+        @keyframes ripple-effect { to { transform: scale(4); opacity: 0; } }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            nav { top: 10px; padding: 12px 20px; }
+            .profile-container h1 { font-size: 2.5rem; }
+            section { padding: 80px 5%; }
+            .loader-logo { font-size: 3.5rem; }
+            .loader-text { font-size: 1.5rem; letter-spacing: 4px; }
+            #hero { padding-top: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="preloader">
+        <div class="loader-content">
+            <div class="loader-logo">ND</div>
+            <div class="loader-text" id="loaderText">NestingDev</div>
+        </div>
+    </div>
+
+    <canvas id="techCanvas"></canvas>
+
+    <audio id="bgMusic" loop>
+        <source src="my-music.mp3" type="audio/mpeg">
+    </audio>
+
+    <nav>
+        <a href="#hero" class="logo-link">
+            <span class="nav-logo-text gradient-text">NestingDev</span>
+        </a>
+        <div class="nav-links">
+            <a href="#hero">Beranda</a>
+            <a href="#about">Tentang</a>
+            <a href="#skills">Keahlian</a>
+            <a href="#projects">Proyek</a>
+            <a href="#contact">Kontak</a>
+        </div>
+        <button class="theme-toggle" id="themeToggle">☀️ Terang</button>
+    </nav>
+
+    <section id="hero">
+        <div class="profile-container reveal">
+            <img src="favicon/logo-nestingdev.png" alt="NestingDev" class="profile-img">
+            <h1>We are <span class="gradient-text">NestingDev</span></h1>
+            <h2>Tech Enthusiast & Digital Innovator</h2>
+            <p>Membangun masa depan ekosistem web yang modern, elegan, dan revolusioner melalui barisan kode dan teknologi tingkat tinggi.</p>
+            <a href="#projects" class="btn-primary">My Project</a>
+            
+            <div class="social-icons">
+                <a href="https://github.com/arifmndr17" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="https://t.me/NestingDev" target="_blank"><i class="fab fa-telegram"></i></a>
+                <a href="https://youtube.com/@NestingDev" target="_blank"><i class="fab fa-youtube"></i></a>
+                <a href="https://tiktok.com/@NestingDev" target="_blank"><i class="fab fa-tiktok"></i></a>
+                <a href="https://instagram.com/NestingDev" target="_blank"><i class="fab fa-instagram"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <section id="about">
+        <h2 class="section-title">Tentang <span class="gradient-text">Kami</span></h2>
+        <div class="about-content reveal">
+            <p>NestingDev adalah ruang dimensi digital di mana ide-ide kreatif diwujudkan ke dalam bentuk teknologi yang dapat disentuh oleh dunia. Kami berspesialisasi dalam merancang antarmuka pengguna (UI) yang elegan serta membangun sistem *backend* yang tangguh.</p>
+            <p>Filosofi kami sederhana: Teknologi harus tidak hanya berfungsi dengan sempurna, tetapi juga harus memanjakan mata. Kami memadukan estetika *cyber-modern* dengan performa tinggi.</p>
+        </div>
+    </section>
+
+    <section id="skills">
+        <h2 class="section-title">Stack <span class="gradient-text">Teknologi</span></h2>
+        <div class="skills-grid">
+            <div class="skill-card reveal">UI/UX Design</div>
+            <div class="skill-card reveal">HTML & CSS Modern</div>
+            <div class="skill-card reveal">JavaScript</div>
+            <div class="skill-card reveal">React.js</div>
+            <div class="skill-card reveal">Node.js</div>
+            <div class="skill-card reveal">Python</div>
+        </div>
+    </section>
+
+    <section id="projects">
+        <h2 class="section-title">My <span class="gradient-text">Project</span></h2>
+        <div class="projects-grid">
+            <div class="project-card reveal">
+                <div class="project-img-placeholder">
+                    <span style="font-size: 3rem;">🌐</span>
+                </div>
+                <div class="project-info">
+                    <h3>The Portofolio</h3>
+                    <p>Desain webste yang elegent dan tampilan UI yang begiitu memanjakan mata.</p>
+                    <a href="#" class="btn-primary" style="padding: 8px 20px; font-size: 0.9rem;">Detail Project</a>
+                </div>
+            </div>
+            <div class="project-card reveal">
+                <div class="project-img-placeholder">
+                    <span style="font-size: 3rem;">📱</span>
+                </div>
+                <div class="project-info">
+                    <h3>Website Absensi</h3>
+                    <p>Desain ulang antarmuka website absensi menggunakan pendekatan Glassmorphism dan warna gradasi modern.</p>
+                    <a href="https://barudak-input.free.nf/" class="btn-primary" style="padding: 8px 20px; font-size: 0.9rem;">Detail Project</a>
+                </div>
+            </div>
+            <div class="project-card reveal">
+                <div class="project-img-placeholder">
+                    <span style="font-size: 3rem;">⚡</span>
+                </div>
+                <div class="project-info">
+                    <h3>EkstraJoss Kernel</h3>
+                    <p>Custom Kernel yang populer digunakan di dunia oprek Android, khususnya untuk pengguna perangkat Asus Zenfone Max M2 (X01AD).</p>
+                    <a href="https://sourceforge.net/projects/extrajoss-kernel/" class="btn-primary" style="padding: 8px 20px; font-size: 0.9rem;">Detail Project</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <h2 class="section-title">Mulai <span class="gradient-text">Terhubung</span></h2>
+        <div class="contact-form reveal">
+            <form action="#" method="POST">
+                <div class="form-group">
+                    <input type="text" placeholder="Nama Anda" required>
+                </div>
+                <div class="form-group">
+                    <input type="email" placeholder="Email Anda" required>
+                </div>
+                <div class="form-group">
+                    <textarea placeholder="Tuliskan pesan atau ide proyek Anda di sini..." required></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Kirim Pesan 🚀</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <h3 class="gradient-text" style="font-size: 1.5rem; margin-bottom: 10px;">NestingDev</h3>
+        <p>&copy; 2026 NestingDev. Ditenagai oleh Inovasi & Teknologi Tanpa Batas.</p>
+    </footer>
+
+    <div class="music-toggle" id="musicToggle" title="Matikan/Nyalakan Musik">🎵</div>
+
+    <script>
+        /* =========================================
+           0. KONTROL LOGIKA PRELOADER
+           ========================================= */
+        document.body.classList.add('loading-active');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const preloader = document.getElementById('preloader');
+            const loaderText = document.getElementById('loaderText');
+            
+            const textString = loaderText.textContent.trim();
+            loaderText.textContent = '';
+            
+            textString.split('').forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char;
+                span.classList.add('loader-letter');
+                span.style.animationDelay = `${0.4 + (index * 0.08)}s`;
+                loaderText.appendChild(span);
+            });
+
+            setTimeout(() => {
+                preloader.style.opacity = '0';
+                preloader.style.visibility = 'hidden';
+                document.body.classList.remove('loading-active');
+            }, 2400); 
+        });
+
+        /* =========================================
+           1. LOGIKA KURSOR ASAP BERWARNA
+           ========================================= */
+        const smokeCanvas = document.createElement('canvas');
+        smokeCanvas.id = 'smokeCanvas';
+        document.body.appendChild(smokeCanvas);
+        const smokeCtx = smokeCanvas.getContext('2d');
+
+        function resizeSmoke() {
+            smokeCanvas.width = window.innerWidth;
+            smokeCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeSmoke);
+        resizeSmoke();
+
+        let smokeParticles = [];
+        let mouse = { x: -100, y: -100 };
+        const smokeColors = ['168, 85, 247', '59, 130, 246', '236, 72, 153'];
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            for (let i = 0; i < 3; i++) {
+                smokeParticles.push(new SmokeParticle(mouse.x, mouse.y));
+            }
+        });
+
+        class SmokeParticle {
+            constructor(x, y) {
+                this.x = x + (Math.random() * 10 - 5);
+                this.y = y + (Math.random() * 10 - 5);
+                this.size = Math.random() * 8 + 4;
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 1) * 2;
+                this.life = 1;
+                this.decay = Math.random() * 0.03 + 0.015; 
+                this.color = smokeColors[Math.floor(Math.random() * smokeColors.length)];
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.size += 0.3;
+                this.life -= this.decay;
+            }
+            draw() {
+                smokeCtx.beginPath();
+                smokeCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                smokeCtx.fillStyle = `rgba(${this.color}, ${this.life * 0.4})`; 
+                smokeCtx.fill();
+            }
+        }
+
+        function animateSmoke() {
+            requestAnimationFrame(animateSmoke);
+            smokeCtx.clearRect(0, 0, smokeCanvas.width, smokeCanvas.height);
+            for (let i = 0; i < smokeParticles.length; i++) {
+                smokeParticles[i].update();
+                smokeParticles[i].draw();
+                if (smokeParticles[i].life <= 0) {
+                    smokeParticles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+        animateSmoke();
+
+        window.addEventListener('mousedown', (e) => {
+            const ripple = document.createElement('div');
+            ripple.classList.add('ripple');
+            ripple.style.left = (e.clientX - 10) + 'px'; 
+            ripple.style.top = (e.clientY - 10) + 'px';
+            document.body.appendChild(ripple);
+            setTimeout(() => { ripple.remove(); }, 600);
+        });
+
+        /* =========================================
+           2. TEMA GELAP/TERANG
+           ========================================= */
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        html.setAttribute('data-theme', savedTheme);
+        updateThemeButton(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeButton(newTheme);
+        });
+
+        function updateThemeButton(theme) {
+            themeToggle.innerHTML = theme === 'dark' ? '☀️ Terang' : '🌙 Gelap';
+        }
+
+        /* =========================================
+           3. ANIMASI SCROLL REVEAL
+           ========================================= */
+        function reveal() {
+            var reveals = document.querySelectorAll(".reveal");
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                var elementVisible = 100;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", reveal);
+        reveal(); 
+
+        /* =========================================
+           4. MUSIK OTOMATIS
+           ========================================= */
+        const bgMusic = document.getElementById('bgMusic');
+        const musicToggle = document.getElementById('musicToggle');
+        let isMusicPlaying = false;
+
+        document.body.addEventListener('click', function initAudio() {
+            if(!isMusicPlaying) {
+                bgMusic.play().then(() => {
+                    isMusicPlaying = true;
+                    musicToggle.classList.add('playing');
+                    musicToggle.innerHTML = '🎶';
+                }).catch(e => console.log("Menunggu audio...", e));
+                document.body.removeEventListener('click', initAudio);
+            }
+        }, { once: true });
+
+        musicToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if(isMusicPlaying) {
+                bgMusic.pause();
+                isMusicPlaying = false;
+                musicToggle.classList.remove('playing');
+                musicToggle.innerHTML = '🎵';
+            } else {
+                bgMusic.play();
+                isMusicPlaying = true;
+                musicToggle.classList.add('playing');
+                musicToggle.innerHTML = '🎶';
+            }
+        });
+
+        /* =========================================
+           5. CANVAS TECH NETWORK
+           ========================================= */
+        const canvas = document.getElementById('techCanvas');
+        const ctx = canvas.getContext('2d');
+        let particlesArray = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x; this.y = y; this.directionX = directionX; this.directionY = directionY;
+                this.size = size; this.color = color;
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color; ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+                this.x += this.directionX; this.y += this.directionY; this.draw();
+            }
+        }
+
+        function initCanvas() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 12000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 2) + 1;
+                let x = Math.random() * innerWidth; let y = Math.random() * innerHeight;
+                let directionX = (Math.random() * 1.5) - 0.75; let directionY = (Math.random() * 1.5) - 0.75;
+                let color = '#a855f7';
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        function connectParticles() {
+            const maxDistance = 130;
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const r = isDark ? 168 : 59; const g = isDark ? 85 : 130; const b = isDark ? 247 : 246;
+
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let c = a; c < particlesArray.length; c++) {
+                    let dx = particlesArray[a].x - particlesArray[c].x; 
+                    let dy = particlesArray[a].y - particlesArray[c].y;
+                    let distance = (dx * dx) + (dy * dy);
+                    
+                    if (distance < maxDistance * maxDistance) {
+                        let opacityValue = 1 - (distance / (maxDistance * maxDistance));
+                        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacityValue})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[c].x, particlesArray[c].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateCanvas() {
+            requestAnimationFrame(animateCanvas);
+            ctx.clearRect(0, 0, innerWidth, innerHeight);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connectParticles();
+        }
+
+        initCanvas();
+        animateCanvas();
+    </script>
+</body>
+</html>
